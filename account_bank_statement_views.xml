@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="treasury_view_bank_statement_form" model="ir.ui.view">
+            <field name="name">view.bank.statement.form.inherit</field>
+            <field name="model">account.bank.statement</field>
+            <field name="inherit_id" ref="account.view_bank_statement_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='date']" position="after">
+                    <field name="sales_person" options="{'no_create': True, 'no_create_edit': True}"
+                           domain="[('is_sales_person', '=', True)]"/>
+                    <field name="period"/>
+                    <field name="move_to_main" force_save="1"/>
+                    <field name="can_edit_balance" invisible="1"/>
+
+
+                    <field name="hide_cheque_field" invisible="1"/>
+                </xpath>
+
+                <xpath expr="//button[@name='button_reopen']" position="attributes">
+                    <attribute name="attrs">{'invisible': ['|','&amp;',('move_to_main', '=',True),('move_to_main','!=',False),('state', '!=','posted')]}
+                    </attribute>
+                </xpath>
+<!--                <xpath expr="//button[@name='button_reopen']" position="attributes">-->
+<!--                    <attribute name="attrs">{'invisible': ['&amp;', '|', ('move_to_main', '!=', False), ('move_to_main', '=',True), ('state', '!=', 'posted')]}-->
+<!--                    </attribute>-->
+<!--                </xpath>-->
+
+
+                <button name="button_post" position="attributes">
+                    <attribute name="attrs">{'invisible':['|', ('move_to_main','=',True)]}</attribute>
+                </button>
+
+                <button name="button_post" position="after">
+                    <button name="approve_button_post" string="Approve" states="open" class="oe_highlight" type="object"
+                            attrs="{'invisible':['|',('move_to_main','!=',True)]}"
+                            groups="treasury.approve_treasury"
+                    />
+                </button>
+                <!-- ******************************************* start ********************************************************** -->
+
+                <xpath expr="//field[@name='line_ids']" position="attributes">
+                    <attribute name="attrs">{'readonly':[('state','=','confirm')]}</attribute>
+                </xpath>
+
+                <xpath expr="//field[@name='line_ids']//field[@name='date']" position="attributes">
+                    <attribute name="attrs">{'readonly':[('state','not in',['open'])]}</attribute>
+                </xpath>
+
+                <xpath expr="//notebook//page[@name='statement_line_ids']//field[@name='line_ids']//tree/field[@name='partner_id']"
+                       position="after">
+                    <field name="employee_ids" invisible="1"/>
+                    <field name="sales_person" options="{'no_create': True, 'no_create_edit': True}"
+                           domain="[('id', 'in', employee_ids)]" readonly="1" force_save="1"/>
+
+                    <field name="period" readonly="1"/>
+
+                    <field name="allow_cheque" invisible="1"/>
+                    <field name="is_canceled" readonly="1" invisible="1"/>
+
+                    <field name="journal_required_if_reconcile" invisible="1"/>
+                    <field name="journal_name" invisible="1"/>
+
+                    <field name="bank_name" string="Bank Name"
+                           attrs="{'readonly':[('state','!=','open')],'column_invisible': [('parent.hide_cheque_field', '=',  False)]}"/>
+                    <field name="date_of_cheque" string="Cheque Date"
+                           attrs="{'readonly':[('state','!=','open')],'column_invisible': [('parent.hide_cheque_field', '=',  False)]}"/>
+                    <field name="cheque_number" string="Cheque Number"
+                           attrs="{'readonly':[('state','!=','open')],'column_invisible': [('parent.hide_cheque_field', '=',  False)]}"/>
+
+                </xpath>
+
+                <xpath expr="//notebook//page[@name='statement_line_ids']//field[@name='line_ids']//tree/field[@name='amount']"
+                       position="after">
+                    <field name="journal_bank" string="Journal Bank"
+                           attrs="{'readonly':[('state','=','confirm')],'required':['|',('journal_required_if_reconcile','=',True),
+                           ('journal_name','=','cheqe')],'column_invisible': [('parent.hide_cheque_field', '=',  False)]}"
+                           domain="[('allow_cheque', '=', True)]"/>
+                    <field name="appear_cancel_button" invisible="1"/>
+                    <button name="cancel_cheque" string="Cancel" type="object" class="oe_highlight"
+                            attrs="{'invisible':[('appear_cancel_button','!=',True)]}"/>
+                </xpath>
+                <!--******************************************* end ********************************************************** -->
+
+
+                <xpath expr="//notebook//page[@name='statement_line_ids']//field[@name='line_ids']//tree/field[@name='payment_ref']"
+                       position="attributes">
+                    <attribute name="required">0</attribute>
+                    <attribute name="force_save">1</attribute>
+                    <attribute name="readonly">1</attribute>
+
+                </xpath>
+
+                <xpath expr="//field[@name='balance_start']" position="attributes">
+                    <attribute name="attrs">{'readonly': ['|', ('can_edit_balance', '!=', True),('state', '=',
+                        'confirm')]}
+                    </attribute>
+                </xpath>
+
+                <xpath expr="//field[@name='balance_end_real']" position="attributes">
+                    <attribute name="attrs">{'readonly': ['|', ('can_edit_balance', '!=', True),('state', '=',
+                        'confirm')]}
+                    </attribute>
+                </xpath>
+
+                <xpath expr="//group[1]//group[2]//div[2]" position="after">
+                    <label for="balance"/>
+                    <div>
+                        <field name="balance"/>
+                    </div>
+
+                </xpath>
+                <xpath expr="//group[1]//group[2]//div[2]" position="after">
+                    <label for="new_balance" invisible="1"/>
+                    <div>
+                        <field name="new_balance" invisible="1"/>
+                    </div>
+                </xpath>
+                <xpath expr="//group[1]//group[2]//div[2]" position="after">
+                    <label for="old_balance" invisible="1"/>
+                    <div>
+                        <field name="old_balance" invisible="1"/>
+                    </div>
+                </xpath>
+
+                <xpath expr="//group[@name='sale_total']//div[1]" position="before">
+                    <label for="balance"/>
+                    <div>
+                        <field name="balance"/>
+                    </div>
+                </xpath>
+
+            </field>
+        </record>
+
+        <record id="view_bank_statement_tree_inherit" model="ir.ui.view">
+            <field name="name">view.bank.statement.tree.inherit</field>
+            <field name="model">account.bank.statement</field>
+            <field name="inherit_id" ref="account.view_bank_statement_tree"/>
+            <field name="arch" type="xml">
+
+                <xpath expr="//field[@name='journal_id']" position="after">
+                    <field name="sales_person" options="{'no_create': True, 'no_create_edit': True}"
+                           domain="[('is_sales_person', '=', True)]"/>
+                </xpath>
+                <xpath expr="//field[@name='balance_end_real']" position="after">
+                    <field name="balance"/>
+
+                </xpath>
+            </field>
+        </record>
+
+        <record id="view_bank_statement_search_inherit" model="ir.ui.view">
+            <field name="name">view.bank.statement.serch.inherit</field>
+            <field name="model">account.bank.statement</field>
+            <field name="inherit_id" ref="account.view_bank_statement_search"/>
+            <field name="arch" type="xml">
+                <xpath expr="//filter[@name='confirmed']" position="after">
+                    <separator/>
+                    <filter string="المناديب" name="ٍsales_person" domain="[('sales_person', '!=', False)]"/>
+                    <filter string="المناديب" name="ٍsales_person" context="{'group_by': 'sales_person'}"/>
+                </xpath>
+
+
+            </field>
+        </record>
+    </data>
+</odoo>
